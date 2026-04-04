@@ -1,16 +1,26 @@
 namespace Modules.Core.Domain;
 
-public sealed class Listing(ListingId id, string title, decimal price)
+public sealed class Listing
 {
-    public ListingId Id { get; } = id;
+    public ListingId Id { get; }
 
-    public string Title { get; private set; } = ValidateTitle(title);
+    public string Title { get; private set; }
 
-    public decimal Price { get; private set; } = ValidatePrice(price);
+    public decimal Price { get; private set; }
 
-    public ListingStatus Status { get; private set; } = ListingStatus.Draft;
+    public ListingStatus Status { get; private set; }
 
-    public DateTime CreatedAtUtc { get; } = DateTime.UtcNow;
+    public DateTime CreatedAtUtc { get; }
+
+    public Listing(ListingId id, string title, decimal price, ListingStatus status = ListingStatus.Draft, DateTime? createdAtUtc = null)
+    {
+        Id = id;
+        Title = ValidateTitle(title);
+        Price = ValidatePrice(price);
+        Status = ListingStatus.Draft;
+        CreatedAtUtc = EnsureUtc(createdAtUtc ?? DateTime.UtcNow);
+        ApplyStatus(status);
+    }
 
     public void ChangeStatus(ListingStatus newStatus)
     {
@@ -67,5 +77,31 @@ public sealed class Listing(ListingId id, string title, decimal price)
         }
 
         return price;
+    }
+
+    private static DateTime EnsureUtc(DateTime dateTime) =>
+        dateTime.Kind == DateTimeKind.Utc
+            ? dateTime
+            : DateTime.SpecifyKind(dateTime, DateTimeKind.Utc);
+
+    private void ApplyStatus(ListingStatus status)
+    {
+        switch (status)
+        {
+            case ListingStatus.Draft:
+                break;
+            case ListingStatus.Published:
+                ChangeStatus(ListingStatus.Published);
+                break;
+            case ListingStatus.Sold:
+                ChangeStatus(ListingStatus.Published);
+                ChangeStatus(ListingStatus.Sold);
+                break;
+            case ListingStatus.Deleted:
+                ChangeStatus(ListingStatus.Deleted);
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(status), status, "Unknown listing status.");
+        }
     }
 }
