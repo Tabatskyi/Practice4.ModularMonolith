@@ -14,8 +14,9 @@ public static class DependencyInjection
     {
         var connectionString =
             configuration.GetConnectionString("ListingDb")
-            ?? Environment.GetEnvironmentVariable("ConnectionStrings__ListingDb")
-            ?? throw new InvalidOperationException("Connection string for ListingDb was not found in configuration or environment variables.");
+            ?? configuration.GetConnectionString("CoreDb")
+            ?? Environment.GetEnvironmentVariable("ConnectionStrings__CoreDb")
+            ?? throw new InvalidOperationException("Connection string for CoreDb was not found in configuration or environment variables.");
 
         services.AddDbContext<ListingDbContext>(options => options.UseNpgsql(connectionString));
         services.AddAutoMapper(cfg => cfg.AddProfile<ListingMappingProfile>());
