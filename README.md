@@ -13,3 +13,6 @@ Domain rules:
   - Published -> Draft
   - Draft -> Deleted
 - A listing cannot be edited after it is sold
+
+Run:
+`docker compose up -d`

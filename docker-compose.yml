@@ -1,0 +1,36 @@
+services:
+  api:
+    build:
+      context: ./src
+      dockerfile: Dockerfile
+    container_name: practice4-api
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__CoreDb: Host=postgres;Port=5432;Database=practice4_modular_monolith;Username=postgres;Password=postgres
+    ports:
+      - "80:8080"
+
+  postgres:
+    image: postgres:alpine
+    container_name: practice4-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: practice4_modular_monolith
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d practice4_modular_monolith"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
