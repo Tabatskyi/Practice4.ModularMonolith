@@ -10,6 +10,7 @@ services:
         condition: service_healthy
     environment:
       ASPNETCORE_ENVIRONMENT: Development
+      Migrations__ApplyOnStartup: "true"
       ConnectionStrings__CoreDb: Host=postgres;Port=5432;Database=practice4_modular_monolith;Username=postgres;Password=postgres
     ports:
       - "80:8080"
