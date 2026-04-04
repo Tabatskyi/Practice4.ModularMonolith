@@ -9,6 +9,7 @@ public class CoreApiSmokeTests : IClassFixture<WebApplicationFactory<Program>>
 
     public CoreApiSmokeTests(WebApplicationFactory<Program> factory)
     {
+        Environment.SetEnvironmentVariable("Migrations__ApplyOnStartup", "false");
         Environment.SetEnvironmentVariable(
             "ConnectionStrings__CoreDb",
             "Host=localhost;Port=5432;Database=practice4_modular_monolith;Username=postgres;Password=postgres");
