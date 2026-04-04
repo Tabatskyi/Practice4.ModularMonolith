@@ -9,9 +9,8 @@ public sealed class ListingDbContextFactory : IDesignTimeDbContextFactory<Listin
     {
         var optionsBuilder = new DbContextOptionsBuilder<ListingDbContext>();
 
-        var connectionString =
-            Environment.GetEnvironmentVariable("ConnectionStrings__ListingDb")
-            ?? throw new InvalidOperationException("Connection string for ListingDb was not found in environment variables.");
+        var connectionString = Environment.GetEnvironmentVariable("ConnectionStrings__CoreDb")
+            ?? "Host=localhost;Port=5432;Database=practice4_modular_monolith;Username=postgres;Password=postgres";
 
         optionsBuilder.UseNpgsql(connectionString);
 
