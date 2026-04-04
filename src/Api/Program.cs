@@ -16,14 +16,23 @@ public class Program
         {
             options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
         });
+
+        builder.Services.AddEndpointsApiExplorer();
+        builder.Services.AddSwaggerGen();
+
         builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(CreateListingCommand).Assembly));
         builder.Services.AddCoreInfrastructure(builder.Configuration);
 
         var app = builder.Build();
 
-        var coreItems = app.MapGroup("/core-items");
+        if (app.Environment.IsDevelopment())
+        {
+            app.UseSwagger();
+            app.UseSwaggerUI();
+            app.MapGet("/", () => Results.Redirect("/swagger"));
+        }
 
-        coreItems.MapPost("/", async (CreateListingRequest request, ISender sender, CancellationToken cancellationToken) =>
+        app.MapPost("/core-items", async (CreateListingRequest request, ISender sender, CancellationToken cancellationToken) =>
         {
             try
             {
@@ -44,13 +53,13 @@ public class Program
             }
         });
 
-        coreItems.MapGet("/{id:guid}", async (Guid id, ISender sender, CancellationToken cancellationToken) =>
+        app.MapGet("/core-items/{id:guid}", async (Guid id, ISender sender, CancellationToken cancellationToken) =>
         {
             var listing = await sender.Send(new GetListingByIdCommand(id), cancellationToken);
             return listing is null ? Results.NotFound() : Results.Ok(ListingResponse.FromDomain(listing));
         });
 
-        coreItems.MapPatch("/{id:guid}/status", async (Guid id, UpdateListingStatusRequest request, ISender sender, CancellationToken cancellationToken) =>
+        app.MapPatch("/core-items/{id:guid}/status", async (Guid id, UpdateListingStatusRequest request, ISender sender, CancellationToken cancellationToken) =>
         {
             try
             {
