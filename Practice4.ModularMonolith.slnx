@@ -1,0 +1,8 @@
+<Solution>
+  <Project Path="Api/Api.csproj" />
+  <Project Path="Modules.Core.Application/Modules.Core.Application.csproj" />
+  <Project Path="Modules.Core.Domain/Modules.Core.Domain.csproj" />
+  <Project Path="Modules.Core.Infrastructure/Modules.Core.Infrastructure.csproj" />
+  <Project Path="Modules.Core.Tests/Modules.Core.Tests.csproj" />
+  <Project Path="Shared/Shared.csproj" />
+</Solution>
