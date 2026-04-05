@@ -1,9 +1,12 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
-COPY . .
+COPY NotificationService/NotificationService.csproj NotificationService/
+COPY Shared/Shared.csproj Shared/
 RUN dotnet restore NotificationService/NotificationService.csproj
-RUN dotnet publish NotificationService/NotificationService.csproj -c Release -o /app/publish /p:UseAppHost=false
+
+COPY . .
+RUN dotnet publish NotificationService/NotificationService.csproj -c Release -o /app/publish /p:UseAppHost=false --no-restore
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
