@@ -34,6 +34,11 @@ services:
       Migrations__ApplyOnStartup: "true"
       ConnectionStrings__CoreDb: Host=core-db;Port=5432;Database=core;Username=postgres;Password=postgres
       UsersService__BaseUrl: http://users-service:8080
+      RabbitMq__Host: rabbitmq
+      RabbitMq__Port: "5672"
+      RabbitMq__Username: admin
+      RabbitMq__Password: admin
+      RabbitMq__VirtualHost: /
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
       interval: 10s
@@ -89,10 +94,15 @@ services:
     ports:
       - "5672:5672" # AMQP
       - "15672:15672" # Management UI
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: admin
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:15672/api/healthchecks/node"]
-      interval: 10s
-      timeout: 5s
+      test: rabbitmq-diagnostics -q ping
+      interval: 30s
+      timeout: 10s
       retries: 5
 
   gateway:
@@ -120,3 +130,4 @@ services:
 volumes:
   core_db_data:
   users_db_data:
+  rabbitmq_data:
