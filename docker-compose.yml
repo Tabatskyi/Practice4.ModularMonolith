@@ -1,37 +1,104 @@
 services:
-  api:
-    build:
-      context: ./src
-      dockerfile: Dockerfile
-    container_name: practice4-api
-    restart: unless-stopped
-    depends_on:
-      postgres:
-        condition: service_healthy
-    environment:
-      ASPNETCORE_ENVIRONMENT: Development
-      Migrations__ApplyOnStartup: "true"
-      ConnectionStrings__CoreDb: Host=postgres;Port=5432;Database=practice4_modular_monolith;Username=postgres;Password=postgres
-    ports:
-      - "80:8080"
-
-  postgres:
+  core-db:
     image: postgres:alpine
-    container_name: practice4-postgres
+    container_name: core-db
     restart: unless-stopped
     environment:
-      POSTGRES_DB: practice4_modular_monolith
+      POSTGRES_DB: core
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     ports:
       - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - core_db_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d practice4_modular_monolith"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d core"]
       interval: 10s
       timeout: 5s
       retries: 5
 
+  core-service:
+    build:
+      context: ./src
+      dockerfile: CoreService/Dockerfile
+    container_name: core-service
+    restart: unless-stopped
+    depends_on:
+      core-db:
+        condition: service_healthy
+      users-service:
+        condition: service_started
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+      Migrations__ApplyOnStartup: "true"
+      ConnectionStrings__CoreDb: Host=core-db;Port=5432;Database=core;Username=postgres;Password=postgres
+      UsersService__BaseUrl: http://users-service:8080
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "5000:8080"
+
+  users-db:
+    image: postgres:alpine
+    container_name: users-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: users
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5433:5432"
+    volumes:
+      - users_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d users"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  users-service:
+    build:
+      context: ./src
+      dockerfile: UsersService/Dockerfile
+    container_name: users-service
+    restart: unless-stopped
+    depends_on:
+      users-db:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+      Migrations__ApplyOnStartup: "true"
+      ConnectionStrings__UsersDb: Host=users-db;Port=5432;Database=users;Username=postgres;Password=postgres
+    ports:
+      - "5001:8080"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  gateway:
+    build:
+      context: ./src
+      dockerfile: Gateway/Dockerfile
+    container_name: gateway
+    restart: unless-stopped
+    depends_on:
+      core-service:
+        condition: service_healthy
+      users-service:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:8080
+    ports:
+      - "80:8080"
+
 volumes:
-  postgres_data:
+  core_db_data:
+  users_db_data:
