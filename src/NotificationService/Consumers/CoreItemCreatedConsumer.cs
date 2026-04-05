@@ -1,5 +1,7 @@
 using System.Text.Json;
 using MassTransit;
+using Microsoft.EntityFrameworkCore;
+using Npgsql;
 using NotificationService.Persistence;
 using NotificationService.Persistence.Entities;
 using Shared.Contracts.Events;
@@ -26,7 +28,19 @@ public sealed class CoreItemCreatedConsumer(NotificationDbContext dbContext, ILo
         };
 
         _dbContext.Notifications.Add(notification);
-        await _dbContext.SaveChangesAsync(context.CancellationToken);
+
+        try
+        {
+            await _dbContext.SaveChangesAsync(context.CancellationToken);
+        }
+        catch (DbUpdateException exception) when (exception.InnerException is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation })
+        {
+            _logger.LogInformation(
+                "Skipping duplicate notification event {EventId} for core item {CoreItemId}.",
+                message.EventId,
+                message.CoreItemId);
+            return;
+        }
 
         _logger.LogInformation(
             "Stored notification for event {EventId} and core item {CoreItemId}.",
