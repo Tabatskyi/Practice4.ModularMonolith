@@ -9,7 +9,7 @@ public class CoreDomainTests
     {
         var listingId = ListingId.New();
 
-        Assert.Throws<ArgumentException>(() => new Listing(listingId, "   ", 100));
+        Assert.Throws<ArgumentException>(() => new Listing(listingId, Guid.NewGuid(), "   ", 100));
     }
 
     [Fact]
@@ -17,13 +17,13 @@ public class CoreDomainTests
     {
         var listingId = ListingId.New();
 
-        Assert.Throws<ArgumentOutOfRangeException>(() => new Listing(listingId, "ASUS P8Z68-V", 0));
+        Assert.Throws<ArgumentOutOfRangeException>(() => new Listing(listingId, Guid.NewGuid(), "ASUS P8Z68-V", 0));
     }
 
     [Fact]
     public void ChangeStatus_WithInvalidTransition_ThrowsInvalidOperationException()
     {
-        var listing = new Listing(ListingId.New(), "ASUS G817JZN", 350);
+        var listing = new Listing(ListingId.New(), Guid.NewGuid(), "ASUS G817JZN", 350);
 
         Assert.Throws<InvalidOperationException>(() => listing.ChangeStatus(ListingStatus.Sold));
     }
@@ -31,7 +31,7 @@ public class CoreDomainTests
     [Fact]
     public void UpdateDetails_WhenSold_ThrowsInvalidOperationException()
     {
-        var listing = new Listing(ListingId.New(), "AMD Radeon RX 580", 500);
+        var listing = new Listing(ListingId.New(), Guid.NewGuid(), "AMD Radeon RX 580", 500);
         listing.ChangeStatus(ListingStatus.Published);
         listing.ChangeStatus(ListingStatus.Sold);
 

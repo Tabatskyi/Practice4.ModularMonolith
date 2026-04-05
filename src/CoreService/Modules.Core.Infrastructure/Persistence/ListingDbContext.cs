@@ -15,6 +15,8 @@ public sealed class ListingDbContext(DbContextOptions<ListingDbContext> options)
             builder.HasKey(entity => entity.Id);
             builder.Property(entity => entity.Id)
                 .ValueGeneratedNever();
+            builder.Property(entity => entity.OwnerUserId)
+                .IsRequired();
             builder.Property(entity => entity.Title)
                 .HasMaxLength(256)
                 .IsRequired();

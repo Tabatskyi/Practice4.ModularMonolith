@@ -1,6 +1,7 @@
 using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 using MediatR;
+using Modules.Core.Application.API.Users;
 using Modules.Core.Application.Commands;
 using Modules.Core.Infrastructure;
 using Modules.Core.Infrastructure.Persistence;
@@ -44,12 +45,23 @@ public class Program
         {
             try
             {
-                var id = await sender.Send(new CreateListingCommand(request.Title, request.Price),cancellationToken);
+                var id = await sender.Send(new CreateListingCommand(request.Title, request.Price, request.OwnerUserId),cancellationToken);
                 var listing = await sender.Send(new GetListingByIdCommand(id), cancellationToken);
 
                 return listing is null
                     ? Results.Created($"/core-items/{id}", new { id })
                     : Results.Created($"/core-items/{id}", ListingResponse.FromDomain(listing));
+            }
+            catch (UserNotFoundException exception)
+            {
+                return Results.BadRequest(new { error = exception.Message });
+            }
+            catch (UsersServiceUnavailableException exception)
+            {
+                return Results.Problem(
+                    title: "Users service is unavailable.",
+                    detail: exception.Message,
+                    statusCode: StatusCodes.Status503ServiceUnavailable);
             }
             catch (ArgumentException exception)
             {
