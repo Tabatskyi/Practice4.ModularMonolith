@@ -4,6 +4,8 @@ public sealed class Listing
 {
     public ListingId Id { get; }
 
+    public Guid OwnerUserId { get; }
+
     public string Title { get; private set; }
 
     public decimal Price { get; private set; }
@@ -12,9 +14,10 @@ public sealed class Listing
 
     public DateTime CreatedAtUtc { get; }
 
-    public Listing(ListingId id, string title, decimal price, ListingStatus status = ListingStatus.Draft, DateTime? createdAtUtc = null)
+    public Listing(ListingId id, Guid ownerUserId, string title, decimal price, ListingStatus status = ListingStatus.Draft, DateTime? createdAtUtc = null)
     {
         Id = id;
+        OwnerUserId = ownerUserId;
         Title = ValidateTitle(title);
         Price = ValidatePrice(price);
         Status = ListingStatus.Draft;
