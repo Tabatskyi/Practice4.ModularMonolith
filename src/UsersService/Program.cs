@@ -34,6 +34,7 @@ if (app.Environment.IsDevelopment())
 {
 	app.UseSwagger();
 	app.UseSwaggerUI();
+	app.MapGet("/", () => Results.Redirect("/swagger"));
 }
 
 app.MapPost("/users", async (CreateUserRequest request, UsersDbContext dbContext, CancellationToken cancellationToken) =>

@@ -22,6 +22,11 @@ Run:
 Gateway base URL:
 `http://localhost`
 
+## service URLs
+Core Service: `http://localhost:5000`
+Users Service: `http://localhost:5001`
+swagger enabled for both services at root
+
 ## curl Tests
 
 1. Create user
