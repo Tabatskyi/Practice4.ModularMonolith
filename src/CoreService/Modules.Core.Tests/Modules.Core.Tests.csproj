@@ -23,7 +23,7 @@
     <ProjectReference Include="..\Api\Api.csproj" />
     <ProjectReference Include="..\Modules.Core.Domain\Modules.Core.Domain.csproj" />
     <ProjectReference Include="..\Modules.Core.Application\Modules.Core.Application.csproj" />
-    <ProjectReference Include="..\Shared\Shared.csproj" />
+    <ProjectReference Include="..\..\Shared\Shared.csproj" />
   </ItemGroup>
 
 </Project>
