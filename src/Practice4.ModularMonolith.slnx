@@ -1,4 +1,5 @@
 <Solution>
+  <Project Path="Gateway/Gateway.csproj" />
   <Project Path="CoreService/Api/Api.csproj" />
   <Project Path="CoreService/Modules.Core.Application/Modules.Core.Application.csproj" />
   <Project Path="CoreService/Modules.Core.Domain/Modules.Core.Domain.csproj" />
