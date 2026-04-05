@@ -87,6 +87,53 @@ services:
       timeout: 5s
       retries: 5
 
+  notification-db:
+    image: postgres:alpine
+    container_name: notification-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: notifications
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5434:5432"
+    volumes:
+      - notification_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d notifications"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  notification-service:
+    build:
+      context: ./src
+      dockerfile: NotificationService/Dockerfile
+    container_name: notification-service
+    restart: unless-stopped
+    depends_on:
+      notification-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+      Migrations__ApplyOnStartup: "true"
+      ConnectionStrings__NotificationDb: Host=notification-db;Port=5432;Database=notifications;Username=postgres;Password=postgres
+      RabbitMq__Host: rabbitmq
+      RabbitMq__Port: "5672"
+      RabbitMq__Username: admin
+      RabbitMq__Password: admin
+      RabbitMq__VirtualHost: /
+    ports:
+      - "5002:8080"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   rabbitmq:
     image: rabbitmq:3-management
     container_name: rabbitmq
@@ -130,4 +177,5 @@ services:
 volumes:
   core_db_data:
   users_db_data:
+  notification_db_data:
   rabbitmq_data:
