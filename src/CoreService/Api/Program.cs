@@ -1,10 +1,10 @@
 using System.Text.Json.Serialization;
-using Microsoft.EntityFrameworkCore;
 using MediatR;
 using Modules.Core.Application.API.Users;
 using Modules.Core.Application.Commands;
 using Modules.Core.Infrastructure;
 using Modules.Core.Infrastructure.Persistence;
+using Shared.Migrations;
 
 namespace Api;
 
@@ -31,7 +31,11 @@ public class Program
         var applyMigrationsOnStartup = builder.Configuration.GetValue("Migrations:ApplyOnStartup", true);
         if (applyMigrationsOnStartup)
         {
-            ApplyMigrationsWithRetry(app);
+            MigrationRetryHelper.ApplyMigrationsWithRetry<ListingDbContext>(
+                app.Services,
+                app.Logger,
+                successMessage: "Database migrations applied successfully.",
+                failureMessage: "Failed to apply database migrations on startup.");
         }
 
         if (app.Environment.IsDevelopment())
@@ -101,44 +105,5 @@ public class Program
 
         app.MapGet("/health", () => Results.Ok(new { status = "Healthy" }));
         app.Run();
-    }
-
-    private static void ApplyMigrationsWithRetry(WebApplication app)
-    {
-        const int maxAttempts = 10;
-        var delay = TimeSpan.FromSeconds(2);
-        Exception? lastException = null;
-
-        for (var attempt = 1; attempt <= maxAttempts; attempt++)
-        {
-            try
-            {
-                using var scope = app.Services.CreateScope();
-                var dbContext = scope.ServiceProvider.GetRequiredService<ListingDbContext>();
-                dbContext.Database.Migrate();
-                app.Logger.LogInformation("Database migrations applied successfully.");
-                return;
-            }
-            catch (Exception ex)
-            {
-                lastException = ex;
-
-                if (attempt == maxAttempts)
-                {
-                    break;
-                }
-
-                app.Logger.LogWarning(
-                    ex,
-                    "Migration attempt {Attempt}/{MaxAttempts} failed. Retrying in {DelaySeconds} seconds...",
-                    attempt,
-                    maxAttempts,
-                    delay.TotalSeconds);
-
-                Thread.Sleep(delay);
-            }
-        }
-
-        throw new InvalidOperationException("Failed to apply database migrations on startup.", lastException);
     }
 }

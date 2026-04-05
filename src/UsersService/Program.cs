@@ -1,5 +1,6 @@
 
 using Microsoft.EntityFrameworkCore;
+using Shared.Migrations;
 using UsersService.Contracts;
 using UsersService.Persistence;
 using UsersService.Persistence.Entities;
@@ -21,7 +22,12 @@ var app = builder.Build();
 var applyMigrationsOnStartup = builder.Configuration.GetValue("Migrations:ApplyOnStartup", true);
 if (applyMigrationsOnStartup)
 {
-	ApplyMigrationsWithRetry(app);
+	MigrationRetryHelper.ApplyMigrationsWithRetry<UsersDbContext>(
+		app.Services,
+		app.Logger,
+		successMessage: "Users database migrations applied successfully.",
+		failureMessage: "Failed to apply users database migrations on startup.",
+		retryMessageTemplate: "Users migration attempt {Attempt}/{MaxAttempts} failed. Retrying in {DelaySeconds} seconds...");
 }
 
 if (app.Environment.IsDevelopment())
@@ -67,42 +73,3 @@ app.MapGet("/users/{id:guid}", async (Guid id, UsersDbContext dbContext, Cancell
 app.MapGet("/health", () => Results.Ok(new { status = "Healthy" }));
 
 app.Run();
-
-static void ApplyMigrationsWithRetry(WebApplication app)
-{
-	const int maxAttempts = 10;
-	var delay = TimeSpan.FromSeconds(2);
-	Exception? lastException = null;
-
-	for (var attempt = 1; attempt <= maxAttempts; attempt++)
-	{
-		try
-		{
-			using var scope = app.Services.CreateScope();
-			var dbContext = scope.ServiceProvider.GetRequiredService<UsersDbContext>();
-			dbContext.Database.Migrate();
-			app.Logger.LogInformation("Users database migrations applied successfully.");
-			return;
-		}
-		catch (Exception ex)
-		{
-			lastException = ex;
-
-			if (attempt == maxAttempts)
-			{
-				break;
-			}
-
-			app.Logger.LogWarning(
-				ex,
-				"Users migration attempt {Attempt}/{MaxAttempts} failed. Retrying in {DelaySeconds} seconds...",
-				attempt,
-				maxAttempts,
-				delay.TotalSeconds);
-
-			Thread.Sleep(delay);
-		}
-	}
-
-	throw new InvalidOperationException("Failed to apply users database migrations on startup.", lastException);
-}
