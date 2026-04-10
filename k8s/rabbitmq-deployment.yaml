@@ -36,6 +36,11 @@ spec:
               containerPort: 15672
               protocol: TCP
           env:
+            - name: RABBITMQ_DEFAULT_VHOST
+              valueFrom:
+                configMapKeyRef:
+                  name: rabbitmq-config
+                  key: RABBITMQ_DEFAULT_VHOST
             - name: RABBITMQ_DEFAULT_USER
               valueFrom:
                 secretKeyRef:
@@ -46,6 +51,13 @@ spec:
                 secretKeyRef:
                   name: app-secrets
                   key: RABBITMQ_DEFAULT_PASS
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
           livenessProbe:
             exec:
               command:

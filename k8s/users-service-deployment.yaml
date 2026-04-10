@@ -42,6 +42,13 @@ spec:
                 secretKeyRef:
                   name: app-secrets
                   key: ConnectionStrings__UsersDb
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 300m
+              memory: 256Mi
           livenessProbe:
             httpGet:
               path: /health

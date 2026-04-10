@@ -72,6 +72,13 @@ spec:
                 secretKeyRef:
                   name: app-secrets
                   key: RabbitMq__Password
+          resources:
+            requests:
+              cpu: 150m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
           livenessProbe:
             httpGet:
               path: /health
