@@ -17,6 +17,7 @@ spec:
       containers:
         - name: workflow-service
           image: tabatskyi/microservices-workflow-service
+          imagePullPolicy: IfNotPresent
           ports:
             - name: http
               containerPort: 8080

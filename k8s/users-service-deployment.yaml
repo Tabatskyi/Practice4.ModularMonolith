@@ -17,6 +17,7 @@ spec:
       containers:
         - name: users-service
           image: tabatskyi/microservices-users-service
+          imagePullPolicy: IfNotPresent
           ports:
             - name: http
               containerPort: 8080

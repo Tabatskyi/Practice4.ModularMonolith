@@ -17,6 +17,7 @@ spec:
       containers:
         - name: core-service
           image: tabatskyi/microservices-core-service
+          imagePullPolicy: IfNotPresent
           ports:
             - name: http
               containerPort: 8080

@@ -17,6 +17,7 @@ spec:
       containers:
         - name: gateway
           image: tabatskyi/microservices-gateway
+          imagePullPolicy: IfNotPresent
           ports:
             - name: http
               containerPort: 8080
