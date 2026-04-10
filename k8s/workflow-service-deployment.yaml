@@ -1,0 +1,84 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: workflow-service
+  labels:
+    app: workflow-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: workflow-service
+  template:
+    metadata:
+      labels:
+        app: workflow-service
+    spec:
+      containers:
+        - name: workflow-service
+          image: workflow-service
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          env:
+            - name: ASPNETCORE_ENVIRONMENT
+              valueFrom:
+                configMapKeyRef:
+                  name: workflow-service-config
+                  key: ASPNETCORE_ENVIRONMENT
+            - name: ASPNETCORE_URLS
+              valueFrom:
+                configMapKeyRef:
+                  name: workflow-service-config
+                  key: ASPNETCORE_URLS
+            - name: Migrations__ApplyOnStartup
+              valueFrom:
+                configMapKeyRef:
+                  name: workflow-service-config
+                  key: Migrations__ApplyOnStartup
+            - name: CoreService__BaseUrl
+              valueFrom:
+                configMapKeyRef:
+                  name: workflow-service-config
+                  key: CoreService__BaseUrl
+            - name: UsersService__BaseUrl
+              valueFrom:
+                configMapKeyRef:
+                  name: workflow-service-config
+                  key: UsersService__BaseUrl
+            - name: ConnectionStrings__WorkflowDb
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: ConnectionStrings__WorkflowDb
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 5
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 5
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: workflow-service
+  labels:
+    app: workflow-service
+spec:
+  selector:
+    app: workflow-service
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
