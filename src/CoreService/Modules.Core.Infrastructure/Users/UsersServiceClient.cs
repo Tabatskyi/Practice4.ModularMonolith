@@ -1,5 +1,6 @@
 using System.Net;
 using Modules.Core.Application.API.Users;
+using Polly.Timeout;
 using Shared.Api;
 
 namespace Modules.Core.Infrastructure.Users;
@@ -35,9 +36,13 @@ internal sealed class UsersServiceClient(HttpClient httpClient) : IUsersServiceC
         {
             throw;
         }
+        catch (TimeoutRejectedException exception)
+        {
+            throw new UsersServiceTimeoutException("Users service request timed out.", exception);
+        }
         catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
         {
-            throw new UsersServiceUnavailableException("Users service request timed out.");
+            throw new UsersServiceTimeoutException("Users service request timed out.");
         }
         catch (HttpRequestException exception)
         {
