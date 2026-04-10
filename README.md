@@ -126,3 +126,19 @@ then:
 `kubectl port-forward svc/gateway 80:80`
 
 all images are available on DockerHub, no need to build locally.
+
+## Practice8.KubernetesHardening
+
+### Rolling update
+
+```bash
+kubectl set image deployment/core-service core-service=tabatskyi/microservices-core-service:v2
+kubectl rollout status deployment/core-service
+```
+
+### Rollback
+
+```bash
+kubectl rollout undo deployment/core-service
+kubectl rollout status deployment/core-service
+```
