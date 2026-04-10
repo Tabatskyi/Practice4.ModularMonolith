@@ -65,6 +65,24 @@ services:
       timeout: 5s
       retries: 5
 
+  workflow-db:
+    image: postgres:alpine
+    container_name: workflow-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: workflows
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5435:5432"
+    volumes:
+      - workflow_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d workflows"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   users-service:
     build:
       context: ./src
@@ -81,6 +99,34 @@ services:
       ConnectionStrings__UsersDb: Host=users-db;Port=5432;Database=users;Username=postgres;Password=postgres
     ports:
       - "5001:8080"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  workflow-service:
+    build:
+      context: ./src
+      dockerfile: WorkflowService/Dockerfile
+    container_name: workflow-service
+    restart: unless-stopped
+    depends_on:
+      workflow-db:
+        condition: service_healthy
+      core-service:
+        condition: service_healthy
+      users-service:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+      Migrations__ApplyOnStartup: "true"
+      ConnectionStrings__WorkflowDb: Host=workflow-db;Port=5432;Database=workflows;Username=postgres;Password=postgres
+      CoreService__BaseUrl: http://core-service:8080
+      UsersService__BaseUrl: http://users-service:8080
+    ports:
+      - "5003:8080"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
       interval: 10s
@@ -163,6 +209,8 @@ services:
         condition: service_healthy
       users-service:
         condition: service_healthy
+      workflow-service:
+        condition: service_healthy
     environment:
       ASPNETCORE_ENVIRONMENT: Production
       ASPNETCORE_URLS: http://+:8080
@@ -177,5 +225,6 @@ services:
 volumes:
   core_db_data:
   users_db_data:
+  workflow_db_data:
   notification_db_data:
   rabbitmq_data:
