@@ -120,6 +120,13 @@ public class Program
                     detail: exception.Message,
                     statusCode: StatusCodes.Status503ServiceUnavailable);
             }
+            catch (UsersServiceTimeoutException exception)
+            {
+                return Results.Problem(
+                    title: "Users service request timed out.",
+                    detail: exception.Message,
+                    statusCode: StatusCodes.Status504GatewayTimeout);
+            }
             catch (ArgumentException exception)
             {
                 return Results.BadRequest(new { error = exception.Message });
