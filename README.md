@@ -117,3 +117,12 @@ Then check workflow status by id:
 curl -i http://localhost/workflows/<workflowId>
 ```
 
+# Practice7.Kubernetes
+
+just run:
+`kubectl apply -f k8s/`
+
+then:
+`kubectl port-forward svc/gateway 80:80`
+
+all images are available on DockerHub, no need to build locally.
