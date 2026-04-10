@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: notification-service
-          image: notification-service
+          image: tabatskyi/microservices-notification-service
           ports:
             - name: http
               containerPort: 8080

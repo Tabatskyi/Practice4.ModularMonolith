@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: core-service
-          image: core-service
+          image: tabatskyi/microservices-core-service
           ports:
             - name: http
               containerPort: 8080

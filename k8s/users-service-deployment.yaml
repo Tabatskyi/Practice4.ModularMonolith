@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: users-service
-          image: users-service
+          image: tabatskyi/microservices-users-service
           ports:
             - name: http
               containerPort: 8080
