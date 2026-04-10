@@ -1,5 +1,6 @@
 
 using Microsoft.EntityFrameworkCore;
+using Shared.Api;
 using Shared.Migrations;
 using UsersService.Contracts;
 using UsersService.Persistence;
@@ -9,6 +10,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddCorrelationIdMiddleware();
 
 var connectionString =
 	builder.Configuration.GetConnectionString("UsersDb")
@@ -36,6 +38,8 @@ if (app.Environment.IsDevelopment())
 	app.UseSwaggerUI();
 	app.MapGet("/", () => Results.Redirect("/swagger"));
 }
+
+app.UseCorrelationIdMiddleware();
 
 app.MapPost("/users", async (CreateUserRequest request, UsersDbContext dbContext, CancellationToken cancellationToken) =>
 {

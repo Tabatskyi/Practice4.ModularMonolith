@@ -117,7 +117,7 @@ Then check workflow status by id:
 curl -i http://localhost/workflows/<workflowId>
 ```
 
-# Practice7.Kubernetes
+## Practice7.Kubernetes
 
 just run:
 `kubectl apply -f k8s/`

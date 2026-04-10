@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Shared.Api;
 using Shared.Migrations;
 using WorkflowService.Api;
 using WorkflowService.Clients;
@@ -9,6 +10,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddCorrelationIdMiddleware();
 
 var connectionString =
     builder.Configuration.GetConnectionString("WorkflowDb")
@@ -59,6 +61,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
     app.MapGet("/", () => Results.Redirect("/swagger"));
 }
+
+app.UseCorrelationIdMiddleware();
 
 app.MapPost("/workflows/{action}", async (
     string action,

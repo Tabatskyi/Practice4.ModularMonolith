@@ -33,6 +33,7 @@ public class Program
 
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();
+        builder.Services.AddCorrelationIdMiddleware();
 
         builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(CreateListingCommand).Assembly));
         builder.Services.AddCoreInfrastructure(builder.Configuration);
@@ -72,16 +73,16 @@ public class Program
             app.MapGet("/", () => Results.Redirect("/swagger"));
         }
 
+        app.UseCorrelationIdMiddleware();
+
         app.MapPost("/core-items", async (CreateListingRequest request, ISender sender, IPublishEndpoint publishEndpoint, HttpContext httpContext, CancellationToken cancellationToken) =>
         {
             try
             {
                 var id = await sender.Send(new CreateListingCommand(request.Title, request.Price, request.OwnerUserId),cancellationToken);
 
-                var correlationIdHeaderValue = httpContext.Request.Headers.TryGetValue(Utils.CorrelationIdHeaderName, out var headerValue)
-                    ? headerValue.ToString()
-                    : null;
-                var correlationId = Utils.ResolveCorrelationId(correlationIdHeaderValue, httpContext.TraceIdentifier);
+                var correlationId = CorrelationContext.CorrelationId
+                    ?? Utils.ResolveCorrelationId(null);
                 var coreItemCreatedEvent = new CoreItemCreatedEvent(
                     EventId: Guid.NewGuid(),
                     OccurredAt: DateTimeOffset.UtcNow,
@@ -93,6 +94,8 @@ public class Program
                 await publishEndpoint.Publish(coreItemCreatedEvent, publishContext =>
                 {
                     publishContext.SetRoutingKey(CoreItemCreatedEventName);
+                    publishContext.Headers.Set("correlation_id", correlationId);
+                    publishContext.Headers.Set(Utils.CorrelationIdHeaderName, correlationId);
 
                     if (Guid.TryParse(correlationId, out var parsedCorrelationId))
                     {

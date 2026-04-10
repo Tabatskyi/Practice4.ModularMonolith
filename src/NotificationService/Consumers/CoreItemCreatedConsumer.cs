@@ -18,11 +18,16 @@ public sealed class CoreItemCreatedConsumer(NotificationDbContext dbContext, ILo
     public async Task Consume(ConsumeContext<CoreItemCreatedEvent> context)
     {
         var message = context.Message;
+        var correlationId = !string.IsNullOrWhiteSpace(message.CorrelationId)
+            ? message.CorrelationId
+            : context.CorrelationId?.ToString() ?? Guid.NewGuid().ToString();
+
+        using var _ = _logger.BeginScope("CorrelationId:{CorrelationId}", correlationId);
 
         var notification = new NotificationEntity
         {
             EventId = message.EventId,
-            CorrelationId = message.CorrelationId,
+            CorrelationId = correlationId,
             Payload = JsonSerializer.Serialize(message, PayloadSerializerOptions),
             CreatedAt = DateTime.UtcNow
         };

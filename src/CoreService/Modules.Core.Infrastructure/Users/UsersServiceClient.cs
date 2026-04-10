@@ -1,5 +1,6 @@
 using System.Net;
 using Modules.Core.Application.API.Users;
+using Shared.Api;
 
 namespace Modules.Core.Infrastructure.Users;
 
@@ -11,7 +12,11 @@ internal sealed class UsersServiceClient(HttpClient httpClient) : IUsersServiceC
     {
         try
         {
-            using var response = await _httpClient.GetAsync($"/users/{userId}", cancellationToken);
+            using var request = new HttpRequestMessage(HttpMethod.Get, $"/users/{userId}");
+            var correlationId = CorrelationContext.CorrelationId ?? Guid.NewGuid().ToString();
+            request.Headers.TryAddWithoutValidation(Utils.CorrelationIdHeaderName, correlationId);
+
+            using var response = await _httpClient.SendAsync(request, cancellationToken);
 
             if (response.IsSuccessStatusCode)
             {
