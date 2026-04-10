@@ -1,8 +1,10 @@
 <Solution>
-  <Project Path="Api/Api.csproj" />
-  <Project Path="Modules.Core.Application/Modules.Core.Application.csproj" />
-  <Project Path="Modules.Core.Domain/Modules.Core.Domain.csproj" />
-  <Project Path="Modules.Core.Infrastructure/Modules.Core.Infrastructure.csproj" />
-  <Project Path="Modules.Core.Tests/Modules.Core.Tests.csproj" />
+  <Project Path="Gateway/Gateway.csproj" />
+  <Project Path="CoreService/Api/Api.csproj" />
+  <Project Path="CoreService/Modules.Core.Application/Modules.Core.Application.csproj" />
+  <Project Path="CoreService/Modules.Core.Domain/Modules.Core.Domain.csproj" />
+  <Project Path="CoreService/Modules.Core.Infrastructure/Modules.Core.Infrastructure.csproj" />
+  <Project Path="CoreService/Modules.Core.Tests/Modules.Core.Tests.csproj" />
   <Project Path="Shared/Shared.csproj" />
+  <Project Path="UsersService/UsersService.csproj" />
 </Solution>
