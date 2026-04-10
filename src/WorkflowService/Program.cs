@@ -1,4 +1,8 @@
 using Microsoft.EntityFrameworkCore;
+using Polly;
+using Polly.Extensions.Http;
+using Polly.Timeout;
+using Shared.Api;
 using Shared.Migrations;
 using WorkflowService.Api;
 using WorkflowService.Clients;
@@ -9,6 +13,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddCorrelationIdMiddleware();
 
 var connectionString =
     builder.Configuration.GetConnectionString("WorkflowDb")
@@ -27,17 +32,29 @@ var usersServiceBaseUrl =
 
 builder.Services.AddDbContext<WorkflowDbContext>(options => options.UseNpgsql(connectionString));
 
+var retryPolicy = HttpPolicyExtensions
+    .HandleTransientHttpError()
+    .Or<TimeoutRejectedException>()
+    .WaitAndRetryAsync(
+        retryCount: 2,
+        sleepDurationProvider: retryAttempt => TimeSpan.FromMilliseconds(200 * retryAttempt));
+var timeoutPolicy = Policy.TimeoutAsync<HttpResponseMessage>(TimeSpan.FromSeconds(5));
+
 builder.Services.AddHttpClient<ICoreServiceClient, CoreServiceClient>(client =>
 {
     client.BaseAddress = new Uri(coreServiceBaseUrl, UriKind.Absolute);
-    client.Timeout = TimeSpan.FromSeconds(5);
-});
+    client.Timeout = Timeout.InfiniteTimeSpan;
+})
+    .AddPolicyHandler(retryPolicy)
+    .AddPolicyHandler(timeoutPolicy);
 
 builder.Services.AddHttpClient<IUsersServiceClient, UsersServiceClient>(client =>
 {
     client.BaseAddress = new Uri(usersServiceBaseUrl, UriKind.Absolute);
-    client.Timeout = TimeSpan.FromSeconds(5);
-});
+    client.Timeout = Timeout.InfiniteTimeSpan;
+})
+    .AddPolicyHandler(retryPolicy)
+    .AddPolicyHandler(timeoutPolicy);
 
 builder.Services.AddScoped<BuyListingWorkflowRunner>();
 
@@ -59,6 +76,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
     app.MapGet("/", () => Results.Redirect("/swagger"));
 }
+
+app.UseCorrelationIdMiddleware();
 
 app.MapPost("/workflows/{action}", async (
     string action,

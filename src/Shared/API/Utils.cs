@@ -1,21 +1,17 @@
-using System.Diagnostics;
-
 namespace Shared.Api;
 
 public static class Utils
 {
     public const string CorrelationIdHeaderName = "X-Correlation-Id";
 
-    public static string ResolveCorrelationId(string? correlationIdHeaderValue, string? fallbackTraceIdentifier)
+    public static string ResolveCorrelationId(string? correlationIdHeaderValue)
     {
         if (!string.IsNullOrWhiteSpace(correlationIdHeaderValue))
         {
             return correlationIdHeaderValue;
         }
 
-        return Activity.Current?.TraceId.ToString()
-            ?? fallbackTraceIdentifier
-            ?? Guid.NewGuid().ToString();
+        return Guid.NewGuid().ToString();
     }
 
     public static string ResolveRabbitMqSetting(string? configuredValue, string envKey, string fallback)

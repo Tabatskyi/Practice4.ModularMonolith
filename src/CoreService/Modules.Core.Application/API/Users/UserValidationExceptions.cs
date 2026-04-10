@@ -5,3 +5,6 @@ public sealed class UserNotFoundException(Guid userId)
 
 public sealed class UsersServiceUnavailableException(string message, Exception? innerException = null)
     : Exception(message, innerException);
+
+public sealed class UsersServiceTimeoutException(string message, Exception? innerException = null)
+    : Exception(message, innerException);

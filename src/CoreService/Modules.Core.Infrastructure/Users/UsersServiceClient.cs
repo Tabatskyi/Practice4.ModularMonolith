@@ -1,5 +1,7 @@
 using System.Net;
 using Modules.Core.Application.API.Users;
+using Polly.Timeout;
+using Shared.Api;
 
 namespace Modules.Core.Infrastructure.Users;
 
@@ -11,7 +13,11 @@ internal sealed class UsersServiceClient(HttpClient httpClient) : IUsersServiceC
     {
         try
         {
-            using var response = await _httpClient.GetAsync($"/users/{userId}", cancellationToken);
+            using var request = new HttpRequestMessage(HttpMethod.Get, $"/users/{userId}");
+            var correlationId = CorrelationContext.CorrelationId ?? Guid.NewGuid().ToString();
+            request.Headers.TryAddWithoutValidation(Utils.CorrelationIdHeaderName, correlationId);
+
+            using var response = await _httpClient.SendAsync(request, cancellationToken);
 
             if (response.IsSuccessStatusCode)
             {
@@ -30,9 +36,13 @@ internal sealed class UsersServiceClient(HttpClient httpClient) : IUsersServiceC
         {
             throw;
         }
+        catch (TimeoutRejectedException exception)
+        {
+            throw new UsersServiceTimeoutException("Users service request timed out.", exception);
+        }
         catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
         {
-            throw new UsersServiceUnavailableException("Users service request timed out.");
+            throw new UsersServiceTimeoutException("Users service request timed out.");
         }
         catch (HttpRequestException exception)
         {
