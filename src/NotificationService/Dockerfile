@@ -1,12 +1,12 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
-COPY UsersService/UsersService.csproj UsersService/
+COPY NotificationService/NotificationService.csproj NotificationService/
 COPY Shared/Shared.csproj Shared/
-RUN dotnet restore UsersService/UsersService.csproj
+RUN dotnet restore NotificationService/NotificationService.csproj
 
 COPY . .
-RUN dotnet publish UsersService/UsersService.csproj -c Release -o /app/publish /p:UseAppHost=false --no-restore
+RUN dotnet publish NotificationService/NotificationService.csproj -c Release -o /app/publish /p:UseAppHost=false --no-restore
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
@@ -19,4 +19,4 @@ COPY --from=build /app/publish .
 
 EXPOSE 8080
 
-ENTRYPOINT ["dotnet", "UsersService.dll"]
+ENTRYPOINT ["dotnet", "NotificationService.dll"]

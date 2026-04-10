@@ -5,6 +5,7 @@
   <Project Path="CoreService/Modules.Core.Domain/Modules.Core.Domain.csproj" />
   <Project Path="CoreService/Modules.Core.Infrastructure/Modules.Core.Infrastructure.csproj" />
   <Project Path="CoreService/Modules.Core.Tests/Modules.Core.Tests.csproj" />
+  <Project Path="NotificationService/NotificationService.csproj" />
   <Project Path="Shared/Shared.csproj" />
   <Project Path="UsersService/UsersService.csproj" />
 </Solution>
