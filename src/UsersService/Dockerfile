@@ -1,9 +1,12 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
-COPY . .
+COPY UsersService/UsersService.csproj UsersService/
+COPY Shared/Shared.csproj Shared/
 RUN dotnet restore UsersService/UsersService.csproj
-RUN dotnet publish UsersService/UsersService.csproj -c Release -o /app/publish /p:UseAppHost=false
+
+COPY . .
+RUN dotnet publish UsersService/UsersService.csproj -c Release -o /app/publish /p:UseAppHost=false --no-restore
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app

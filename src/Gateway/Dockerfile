@@ -1,12 +1,18 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
-COPY . .
+COPY Gateway/Gateway.csproj Gateway/
 RUN dotnet restore Gateway/Gateway.csproj
-RUN dotnet publish Gateway/Gateway.csproj -c Release -o /app/publish /p:UseAppHost=false
+
+COPY . .
+RUN dotnet publish Gateway/Gateway.csproj -c Release -o /app/publish /p:UseAppHost=false --no-restore
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
+
+RUN apt-get update \
+	&& apt-get install -y --no-install-recommends curl \
+	&& rm -rf /var/lib/apt/lists/*
 
 COPY --from=build /app/publish .
 
