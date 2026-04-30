@@ -60,3 +60,85 @@ curl -i -X POST http://localhost/core/core-items -H "Content-Type: application/j
 Expected result:
 - Status: `400 Bad Request`
 - Response contains an error about non-existing user
+
+# Practice6.DockerCompose
+Run:
+`docker compose up -d --build`
+
+# Practice7.Kubernetes
+
+## Practice7.Workflow (Buy Listing Saga)
+
+Implemented workflow action:
+- `buy-listing` (`reserve -> pay -> transfer ownership`)
+
+Workflow API:
+- `POST /workflows/{action}`
+- `GET /workflows/{workflowId}`
+
+### Buy Listing Request
+
+```bash
+curl -i -X POST http://localhost/workflows/buy-listing \
+  -H "Content-Type: application/json" \
+  -d '{
+    "listingId":"<listingId>",
+    "buyerUserId":"<buyerUserId>",
+    "simulatePaymentFailure": false
+  }'
+```
+
+Response contains workflow instance with:
+- `workflowId`
+- `type`
+- `state`
+- `createdAt`
+- `updatedAt`
+- `lastError`
+
+### Compensation Check (Forced Failure)
+
+```bash
+curl -i -X POST http://localhost/workflows/buy-listing \
+  -H "Content-Type: application/json" \
+  -d '{
+    "listingId":"<listingId>",
+    "buyerUserId":"<buyerUserId>",
+    "simulatePaymentFailure": true
+  }'
+```
+
+Expected workflow state:
+- `FailedCompensated`
+
+Then check workflow status by id:
+
+```bash
+curl -i http://localhost/workflows/<workflowId>
+```
+
+## Practice7.Kubernetes
+
+just run:
+`kubectl apply -f k8s/`
+
+then:
+`kubectl port-forward svc/gateway 80:80`
+
+all images are available on DockerHub, no need to build locally.
+
+## Practice8.KubernetesHardening
+
+### Rolling update
+
+```bash
+kubectl set image deployment/core-service core-service=tabatskyi/microservices-core-service:v2
+kubectl rollout status deployment/core-service
+```
+
+### Rollback
+
+```bash
+kubectl rollout undo deployment/core-service
+kubectl rollout status deployment/core-service
+```
