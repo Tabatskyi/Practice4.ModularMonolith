@@ -13,6 +13,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddCorrelationIdMiddleware();
 
 var connectionString =
 	builder.Configuration.GetConnectionString("NotificationDb")
@@ -70,6 +71,8 @@ if (app.Environment.IsDevelopment())
 	app.UseSwaggerUI();
 	app.MapGet("/", () => Results.Redirect("/swagger"));
 }
+
+app.UseCorrelationIdMiddleware();
 
 app.MapGet("/health", () => Results.Ok(new { status = "Healthy" }));
 

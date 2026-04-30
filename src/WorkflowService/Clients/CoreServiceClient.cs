@@ -1,6 +1,6 @@
 using System.Net;
-using System.Net.Http.Json;
 using System.Text.Json.Serialization;
+using Shared.Api;
 
 namespace WorkflowService.Clients;
 
@@ -10,10 +10,14 @@ internal sealed class CoreServiceClient(HttpClient httpClient) : ICoreServiceCli
 
     public async Task UpdateListingStatusAsync(Guid listingId, CoreListingStatus status, CancellationToken cancellationToken = default)
     {
-        using var response = await _httpClient.PatchAsJsonAsync(
-            $"/core-items/{listingId}/status",
-            new UpdateListingStatusRequest(status.ToString()),
-            cancellationToken);
+        using var request = new HttpRequestMessage(HttpMethod.Patch, $"/core-items/{listingId}/status")
+        {
+            Content = JsonContent.Create(new UpdateListingStatusRequest(status.ToString()))
+        };
+        var correlationId = CorrelationContext.CorrelationId ?? Guid.NewGuid().ToString();
+        request.Headers.TryAddWithoutValidation(Utils.CorrelationIdHeaderName, correlationId);
+
+        using var response = await _httpClient.SendAsync(request, cancellationToken);
 
         if (response.IsSuccessStatusCode)
         {
